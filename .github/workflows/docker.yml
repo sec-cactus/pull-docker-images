@@ -21,10 +21,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Login to Aliyun Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ALIYUN_REGISTRY }}
+          username: ${{ env.ALIYUN_REGISTRY_USER }}
+          password: ${{ env.ALIYUN_REGISTRY_PASSWORD }}
+      
       - name: Build and push image to Aliyun
         run: |
           # 登录阿里云镜像仓库
-          docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
+          # docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
           
           # 第一步：检测重名镜像（不同命名空间下的同名镜像）
           declare -A duplicate_images
