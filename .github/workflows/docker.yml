@@ -24,9 +24,9 @@ jobs:
       - name: Login to Aliyun Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.ALIYUN_REGISTRY }}
-          username: ${{ secrets.ALIYUN_REGISTRY_USER }}
-          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+          registry: $ALIYUN_REGISTRY
+          username: $ALIYUN_REGISTRY_USER
+          password: $ALIYUN_REGISTRY_PASSWORD
       
       - name: Build and push image to Aliyun
         run: |
