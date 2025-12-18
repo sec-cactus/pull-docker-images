@@ -1,114 +1,111 @@
-name: Docker
-
+name: Docker
 on:
-  workflow_dispatch:
-  push:
-    branches: [ master ]
-
+  workflow_dispatch:  # 手动触发
+  push:
+    branches: [ master ]  # master分支推送时触发
 
 env:
-  ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
-  ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
-  ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
-  ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
+  ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
+  ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
+  ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
+  ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
 
 jobs:
+  build:
+    name: Pull and Push Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v3
 
-  build:
-    name: Pull
-    runs-on: ubuntu-latest
-    steps:
-    - name: Docker Setup Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Build and push image Aliyun
-      run: |
-        docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
-        # 数据预处理,判断镜像是否重名
-        declare -A duplicate_images
-        declare -A temp_map
-        while IFS= read -r line; do
-            # 忽略空行与注释
-            [[ -z "$line" ]] && continue
-            if echo "$line" | grep -q '^\s*#'; then
-                continue
-            fi
-            
-            # 获取镜像的完整名称，例如kasmweb/nginx:1.25.3（命名空间/镜像名:版本号）
-            image=$(echo "$line" | awk '{print $NF}')
-            # 将@sha256:等字符删除
-            image="${image%%@*}"
-            echo "image $image"
-            # 获取镜像名:版本号  例如nginx:1.25.3
-            image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
-            echo "image_name_tag $image_name_tag"
-            # 获取命名空间 例如kasmweb,  这里有种特殊情况 docker.io/nginx，把docker.io当成命名空间，也OK
-            name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
-            echo "name_space: $name_space"
-            # 这里不要是空值影响判断
-            name_space="${name_space}_"
-            # 获取镜像名例如nginx
-            image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
-            echo "image_name: $image_name"
-            
-            # 如果镜像存在于数组中，则添加temp_map
-            if [[ -n "${temp_map[$image_name]}" ]]; then
-                 # 如果temp_map已经存在镜像名，判断是不是同一命名空间
-                 if [[ "${temp_map[$image_name]}" != $name_space  ]]; then
-                    echo "duplicate image name: $image_name"
-                    duplicate_images[$image_name]="true"
-                 fi
-            else
-                # 存镜像的命名空间
-                temp_map[$image_name]=$name_space
-            fi       
-        done < images.txt
-        
-        
-        while IFS= read -r line; do
-            # 忽略空行与注释
-            [[ -z "$line" ]] && continue
-            if echo "$line" | grep -q '^\s*#'; then
-                continue
-            fi
-        
-            echo "docker pull $line"
-            docker pull $line
-            platform=$(echo "$line" | awk -F'--platform[ =]' '{if (NF>1) print $2}' | awk '{print $1}')
-            echo "platform is $platform"
-            # 如果存在架构信息 将架构信息拼到镜像名称前面
-            if [ -z "$platform" ]; then
-                platform_prefix=""
-            else
-                platform_prefix="${platform//\//_}_"
-            fi
-            echo "platform_prefix is $platform_prefix"
-            # 获取镜像的完整名称，例如kasmweb/nginx:1.25.3（命名空间/镜像名:版本号）
-            image=$(echo "$line" | awk '{print $NF}')
-
-            # 获取 镜像名:版本号  例如nginx:1.25.3
-            image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
-            # 获取命名空间 例如kasmweb  这里有种特殊情况 docker.io/nginx，把docker.io当成命名空间，也OK
-            name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
-            # 获取镜像名例  例如nginx
-            image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
-        
-            name_space_prefix=""
-            # 如果镜像名重名
-            if [[ -n "${duplicate_images[$image_name]}" ]]; then
-               #如果命名空间非空，将命名空间加到前缀
-               if [[ -n "${name_space}" ]]; then
-                  name_space_prefix="${name_space}_"
-               fi
-            fi
-            
-            # 将@sha256:等字符删除
-            image_name_tag="${image_name_tag%%@*}"
-            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag"
-            docker tag $image $new_image
-            echo "docker push $new_image"
-            docker push $new_image
-        done < images.txt
+      - name: Build and push image to Aliyun
+        run: |
+          # 登录阿里云镜像仓库
+          docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
+          
+          # 第一步：检测重名镜像（不同命名空间下的同名镜像）
+          declare -A duplicate_images
+          declare -A temp_map
+          
+          while IFS= read -r line; do
+              # 忽略空行和注释行
+              [[ -z "$line" ]] && continue
+              if echo "$line" | grep -q '^\s*#'; then
+                  continue
+              fi
+              
+              # 提取镜像完整名称（如kasmweb/nginx:1.25.3）
+              image=$(echo "$line" | awk '{print $NF}')
+              # 移除@sha256这类摘要信息
+              image="${image%%@*}"
+              echo "Processing image: $image"
+              
+              # 提取镜像名+版本（如nginx:1.25.3）
+              image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
+              # 提取命名空间（如kasmweb，兼容docker.io/nginx这种格式）
+              name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
+              # 避免空值影响判断，加下划线占位
+              name_space="${name_space}_"
+              # 提取纯镜像名（如nginx）
+              image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
+              
+              # 检测是否有不同命名空间的同名镜像
+              if [[ -n "${temp_map[$image_name]}" ]]; then
+                  if [[ "${temp_map[$image_name]}" != "$name_space" ]]; then
+                      echo "Found duplicate image name: $image_name (different namespace)"
+                      duplicate_images[$image_name]="true"
+                  fi
+              else
+                  temp_map[$image_name]="$name_space"
+              fi
+          done < images.txt
+          
+          # 第二步：拉取镜像、打标签并推送到阿里云
+          while IFS= read -r line; do
+              # 忽略空行和注释行
+              [[ -z "$line" ]] && continue
+              if echo "$line" | grep -q '^\s*#'; then
+                  continue
+              fi
+              
+              # 拉取原始镜像
+              echo "Pulling image: $line"
+              docker pull "$line"
+              
+              # 提取平台架构（如linux/amd64），处理--platform参数
+              platform=$(echo "$line" | awk -F'--platform[ =]' '{if (NF>1) print $2}' | awk '{print $1}')
+              echo "Platform detected: $platform"
+              
+              # 构建平台前缀（替换/为_，如linux_amd64_）
+              if [[ -z "$platform" ]]; then
+                  platform_prefix=""
+              else
+                  platform_prefix="${platform//\//_}_"
+              fi
+              
+              # 提取镜像相关信息
+              image=$(echo "$line" | awk '{print $NF}')
+              image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
+              name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
+              image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
+              
+              # 构建命名空间前缀（重名镜像才加）
+              name_space_prefix=""
+              if [[ -n "${duplicate_images[$image_name]}" && -n "$name_space" ]]; then
+                  name_space_prefix="${name_space}_"
+              fi
+              
+              # 清理镜像标签中的摘要信息
+              image_name_tag="${image_name_tag%%@*}"
+              # 构建新镜像名称
+              new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag"
+              
+              # 打标签并推送
+              docker tag "$image" "$new_image"
+              echo "Pushing image: $new_image"
+              docker push "$new_image"
+          done < images.txt
+        shell: bash  # 明确指定bash shell，避免语法兼容问题
