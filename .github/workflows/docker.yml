@@ -108,7 +108,7 @@ jobs:
               # 清理镜像标签中的摘要信息
               image_name_tag="${image_name_tag%%@*}"
               # 构建新镜像名称
-              new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag"
+              new_image="${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/$platform_prefix$name_space_prefix$image_name_tag"
               
               # 打标签并推送
               docker tag "$image" "$new_image"
