@@ -1,3 +1,4 @@
-wazuh/wazuh-manager:5.0.0
-wazuh/wazuh-indexer:5.0.0
-wazuh/wazuh-dashboard:5.0.0
+wazuh/wazuh-manager:4.14.1
+wazuh/wazuh-indexer:4.14.1
+wazuh/wazuh-dashboard:4.14.1
+wazuh/wazuh-certs-generator:0.0.3
