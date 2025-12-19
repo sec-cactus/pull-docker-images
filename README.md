@@ -1,6 +1,5 @@
 # [快速自建一套镜像加速器，可拉取所有墙外镜像](https://mp.weixin.qq.com/s/lnztLgCnephk1b1muhKsNw)
 使用Github Action将Docker镜像转存到阿里云私有仓库，彻底解决在国内Docker镜像无法拉取的问题。
-https://github.com/sec-cactus/pull-docker-images
 
 ## 配置阿里云镜像仓库
  - 登录阿里云后，进入容器镜像服务 https://cr.console.aliyun.com/cn-hangzhou/instances
