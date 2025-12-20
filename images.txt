@@ -1,6 +1,6 @@
-wazuh/wazuh-manager:4.13.1
-wazuh/wazuh-indexer:4.13.1
-wazuh/wazuh-dashboard:4.13.1
+wazuh/wazuh-manager:4.12.0
+wazuh/wazuh-indexer:4.12.0
+wazuh/wazuh-dashboard:4.12.0
 wazuh/wazuh-certs-generator:0.0.2
 busybox:latest
 langgenius/dify-api:1.11.1
