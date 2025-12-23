@@ -11,3 +11,4 @@ langgenius/dify-plugin-daemon:0.5.1-local
 ubuntu/squid:latest
 nginx:latest
 downloads.unstructured.io/unstructured-io/unstructured-api:latest
+node:18-alpine
