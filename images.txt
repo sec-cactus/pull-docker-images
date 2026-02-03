@@ -13,4 +13,5 @@
 # downloads.unstructured.io/unstructured-io/unstructured-api:latest
 # node:18-alpine
 # python:3.13-alpine
-aquasec/trivy:latest
+# aquasec/trivy:latest
+viperplatform/viper:latest
