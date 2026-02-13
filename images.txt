@@ -15,4 +15,5 @@
 # python:3.13-alpine
 # aquasec/trivy:latest
 # viperplatform/viper:latest
-justlikemaki/openclaw-docker-cn-im:latest
+# justlikemaki/openclaw-docker-cn-im:latest
+python:3.12-slim
