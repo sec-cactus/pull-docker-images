@@ -22,4 +22,5 @@
 # vxcontrol/scraper:latest
 # quay.io/prometheuscommunity/postgres-exporter:v0.16.0
 # debian:latest
-vulhub/nextjs:15.5.6
+# vulhub/nextjs:15.5.6
+kalilinux/kali-rolling:latest
