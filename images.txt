@@ -23,4 +23,5 @@
 # quay.io/prometheuscommunity/postgres-exporter:v0.16.0
 # debian:latest
 # vulhub/nextjs:15.5.6
-kalilinux/kali-rolling:latest
+# kalilinux/kali-rolling:latest
+alpine:3.19
