@@ -29,4 +29,4 @@
 # vulhub/n8n:1.65.0
 guacamole/guacd:latest
 postgres:15.2-alpine
-guacamole/guacamole:llatest
+guacamole/guacamole:latest
