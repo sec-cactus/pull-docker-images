@@ -25,4 +25,5 @@
 # vulhub/nextjs:15.5.6
 # kalilinux/kali-rolling:latest
 # alpine:3.19
-golang:1.24-alpine
+# golang:1.24-alpine
+vulhub/n8n:1.65.0
