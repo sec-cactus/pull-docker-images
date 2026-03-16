@@ -27,6 +27,7 @@
 # alpine:3.19
 # golang:1.24-alpine
 # vulhub/n8n:1.65.0
-guacamole/guacd:latest
-postgres:15.2-alpine
-guacamole/guacamole:latest
+# guacamole/guacd:latest
+# postgres:15.2-alpine
+# guacamole/guacamole:latest
+openresty/openresty:1.29.2.1-alpine
